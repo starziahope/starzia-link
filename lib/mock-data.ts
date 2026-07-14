@@ -1,29 +1,10 @@
 import type { Bookmark, Folder } from "@/lib/types";
 
 export const folders: Folder[] = [
-  {
-    id: "dev",
-    name: "개발",
-    color: "bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300",
-  },
-  {
-    id: "design",
-    name: "디자인",
-    color:
-      "bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-300",
-  },
-  {
-    id: "shopping",
-    name: "쇼핑",
-    color:
-      "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-300",
-  },
-  {
-    id: "reading",
-    name: "읽을거리",
-    color:
-      "bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300",
-  },
+  { id: "dev", name: "개발" },
+  { id: "design", name: "디자인" },
+  { id: "shopping", name: "쇼핑" },
+  { id: "reading", name: "읽을거리" },
 ];
 
 export const bookmarks: Bookmark[] = [

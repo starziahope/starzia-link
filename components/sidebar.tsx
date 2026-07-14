@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { bookmarks, folders } from "@/lib/mock-data";
+import { bookmarks } from "@/lib/mock-data";
+import { useFolders } from "@/lib/folders-context";
 import SidebarItem from "@/components/sidebar-item";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { folders } = useFolders();
 
   return (
     <aside className="w-56 shrink-0 border-r border-[var(--border)] p-4">

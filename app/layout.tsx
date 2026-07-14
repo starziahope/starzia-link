@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/header";
 import Sidebar from "@/components/sidebar";
+import { FoldersProvider } from "@/lib/folders-context";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,13 +17,15 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[var(--bg)]">
-        <div className="flex flex-1 flex-col">
-          <Header />
-          <div className="flex flex-1">
-            <Sidebar />
-            {children}
+        <FoldersProvider>
+          <div className="flex flex-1 flex-col">
+            <Header />
+            <div className="flex flex-1">
+              <Sidebar />
+              {children}
+            </div>
           </div>
-        </div>
+        </FoldersProvider>
       </body>
     </html>
   );
