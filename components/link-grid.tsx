@@ -1,12 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { useFolders } from "@/lib/folders-context";
 import { useBookmarks } from "@/lib/bookmarks-context";
 import LinkCard from "@/components/link-card";
+import DeleteBookmarkModal from "@/components/delete-bookmark-modal";
+import type { Bookmark } from "@/lib/types";
 
 export default function LinkGrid({ folderId }: { folderId?: string }) {
   const { folders } = useFolders();
-  const { bookmarks } = useBookmarks();
+  const { bookmarks, removeBookmark } = useBookmarks();
+  const [pendingDelete, setPendingDelete] = useState<Bookmark | null>(null);
 
   const items = folderId
     ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
@@ -15,6 +19,12 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
   const folderName = folderId
     ? folders.find((folder) => folder.id === folderId)?.name
     : undefined;
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    removeBookmark(pendingDelete.id);
+    setPendingDelete(null);
+  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -33,9 +43,21 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
       ) : (
         <section className="grid flex-1 grid-cols-1 content-start gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((bookmark) => (
-            <LinkCard key={bookmark.id} bookmark={bookmark} />
+            <LinkCard
+              key={bookmark.id}
+              bookmark={bookmark}
+              onDelete={() => setPendingDelete(bookmark)}
+            />
           ))}
         </section>
+      )}
+
+      {pendingDelete && (
+        <DeleteBookmarkModal
+          bookmarkTitle={pendingDelete.title}
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import type { Bookmark } from "@/lib/types";
 type BookmarksContextValue = {
   bookmarks: Bookmark[];
   addBookmark: (bookmark: Omit<Bookmark, "id">) => void;
+  removeBookmark: (id: string) => void;
 };
 
 const BookmarksContext = createContext<BookmarksContextValue | null>(null);
@@ -18,8 +19,12 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     setBookmarks((prev) => [{ id: crypto.randomUUID(), ...bookmark }, ...prev]);
   };
 
+  const removeBookmark = (id: string) => {
+    setBookmarks((prev) => prev.filter((bookmark) => bookmark.id !== id));
+  };
+
   return (
-    <BookmarksContext.Provider value={{ bookmarks, addBookmark }}>
+    <BookmarksContext.Provider value={{ bookmarks, addBookmark, removeBookmark }}>
       {children}
     </BookmarksContext.Provider>
   );

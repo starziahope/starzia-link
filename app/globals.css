@@ -115,6 +115,17 @@ select,
   background: rgba(0, 0, 0, 0.1);
 }
 
+.card-action-button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
+}
+.card-action-button:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: #ffffff;
+}
+
 /* 뱃지/태그 */
 .badge-tag {
   background: var(--hover-bg);
