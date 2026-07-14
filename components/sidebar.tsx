@@ -25,9 +25,9 @@ export default function Sidebar() {
     if (wasActive) router.push("/");
   };
 
-  const confirmEdit = (name: string) => {
+  const confirmEdit = async (name: string) => {
     if (!pendingEdit) return;
-    renameFolder(pendingEdit.id, name);
+    await renameFolder(pendingEdit.id, name);
     setPendingEdit(null);
   };
 
