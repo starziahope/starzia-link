@@ -70,6 +70,14 @@ select,
   background: var(--hover-bg);
 }
 
+.btn-danger {
+  background: var(--error);
+  color: #ffffff;
+}
+.btn-danger:hover {
+  background: #d64545;
+}
+
 /* 입력 필드 / 셀렉트 */
 .input-field {
   background: var(--surface);
@@ -101,6 +109,10 @@ select,
 .sidebar-item-active:hover {
   background: var(--accent);
   color: #ffffff;
+}
+
+.sidebar-item-delete:hover {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* 뱃지/태그 */
