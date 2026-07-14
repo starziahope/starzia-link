@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { bookmarks } from "@/lib/mock-data";
 import { useFolders } from "@/lib/folders-context";
+import { useBookmarks } from "@/lib/bookmarks-context";
 import SidebarItem from "@/components/sidebar-item";
 import DeleteFolderModal from "@/components/delete-folder-modal";
 import EditFolderModal from "@/components/edit-folder-modal";
@@ -13,6 +13,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { folders, removeFolder, renameFolder } = useFolders();
+  const { bookmarks } = useBookmarks();
   const [pendingDelete, setPendingDelete] = useState<Folder | null>(null);
   const [pendingEdit, setPendingEdit] = useState<Folder | null>(null);
 
@@ -35,7 +36,7 @@ export default function Sidebar() {
       <nav className="flex flex-col gap-1">
         <SidebarItem
           href="/"
-          label="All"
+          label="전체"
           count={bookmarks.length}
           active={pathname === "/"}
         />

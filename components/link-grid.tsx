@@ -1,7 +1,13 @@
-import { bookmarks, folders } from "@/lib/mock-data";
+"use client";
+
+import { useFolders } from "@/lib/folders-context";
+import { useBookmarks } from "@/lib/bookmarks-context";
 import LinkCard from "@/components/link-card";
 
 export default function LinkGrid({ folderId }: { folderId?: string }) {
+  const { folders } = useFolders();
+  const { bookmarks } = useBookmarks();
+
   const items = folderId
     ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
     : bookmarks;

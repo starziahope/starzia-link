@@ -1,15 +1,46 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { folders } from "@/lib/mock-data";
+import { useBookmarks } from "@/lib/bookmarks-context";
 import FolderSelect from "@/components/folder-select";
 
 export default function NewLinkForm() {
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { addBookmark } = useBookmarks();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+
+    let title = url;
+    try {
+      title = new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      // URL 파싱에 실패해도 입력값을 그대로 제목으로 사용한다
+    }
+    let description: string | undefined;
+    let thumbnail: string | undefined;
+
+    try {
+      const res = await fetch(`/api/og?url=${encodeURIComponent(url)}`);
+      if (res.ok) {
+        const data = await res.json();
+        title = data.title ?? title;
+        description = data.description;
+        thumbnail = data.thumbnail;
+      }
+    } catch {
+      // 오픈 그래프 정보를 가져오지 못해도 링크는 저장한다
+    }
+
+    addBookmark({ title, url, description, thumbnail, folderId });
+    setLoading(false);
+    router.push("/");
   };
 
   return (
@@ -41,9 +72,10 @@ export default function NewLinkForm() {
 
         <button
           type="submit"
+          disabled={loading}
           className="btn-primary mt-2 rounded-md px-4 py-2 text-sm font-medium"
         >
-          저장
+          {loading ? "가져오는 중..." : "확인"}
         </button>
       </form>
     </section>
