@@ -16,7 +16,7 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
   const [pendingEdit, setPendingEdit] = useState<Bookmark | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [draggedHeight, setDraggedHeight] = useState<number | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
+  const [dragOrder, setDragOrder] = useState<string[] | null>(null);
   const [settledId, setSettledId] = useState<string | null>(null);
   const cardRefs = useRef(new Map<string, HTMLDivElement>());
   const prevRects = useRef<Map<string, DOMRect> | null>(null);
@@ -25,17 +25,11 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
     : bookmarks;
 
-  const displayItems = (() => {
-    if (!draggedId || !overId || draggedId === overId) return items;
-    const fromIndex = items.findIndex((b) => b.id === draggedId);
-    const toIndex = items.findIndex((b) => b.id === overId);
-    if (fromIndex === -1 || toIndex === -1) return items;
-
-    const reordered = [...items];
-    const [moved] = reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, moved);
-    return reordered;
-  })();
+  const displayItems = dragOrder
+    ? (dragOrder
+        .map((id) => items.find((bookmark) => bookmark.id === id))
+        .filter(Boolean) as Bookmark[])
+    : items;
 
   const orderKey = displayItems.map((bookmark) => bookmark.id).join(",");
 
@@ -94,26 +88,34 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     const height = cardRefs.current.get(id)?.getBoundingClientRect().height;
     setDraggedHeight(height ?? null);
     setDraggedId(id);
+    setDragOrder(items.map((bookmark) => bookmark.id));
   };
 
   const handleDragEnter = (targetId: string) => {
-    if (!draggedId || draggedId === targetId || overId === targetId) return;
+    if (!draggedId || draggedId === targetId || !dragOrder) return;
+    const fromIndex = dragOrder.indexOf(draggedId);
+    const toIndex = dragOrder.indexOf(targetId);
+    if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+
     captureRects();
-    setOverId(targetId);
+    const reordered = [...dragOrder];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    setDragOrder(reordered);
   };
 
   const handleDrop = () => {
-    if (!draggedId) return;
+    if (!draggedId || !dragOrder) return;
     const sourceId = draggedId;
-    const shouldPersist = overId !== null;
-    const finalIds = displayItems.map((bookmark) => bookmark.id);
+    const originalIds = items.map((bookmark) => bookmark.id);
+    const shouldPersist = dragOrder.join(",") !== originalIds.join(",");
 
     if (shouldPersist) {
       // Fire without awaiting so the optimistic reorder inside
       // reorderBookmarks batches with the state resets below —
       // the dragged card lands in its final spot in one render
       // instead of flashing back to its old position first.
-      reorderBookmarks(finalIds);
+      reorderBookmarks(dragOrder);
       setSettledId(sourceId);
       window.setTimeout(() => {
         setSettledId((current) => (current === sourceId ? null : current));
@@ -122,16 +124,16 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
 
     setDraggedId(null);
     setDraggedHeight(null);
-    setOverId(null);
+    setDragOrder(null);
   };
 
   const handleDragEnd = () => {
-    if (draggedId && overId) {
+    if (dragOrder) {
       captureRects();
     }
     setDraggedId(null);
     setDraggedHeight(null);
-    setOverId(null);
+    setDragOrder(null);
   };
 
   return (
