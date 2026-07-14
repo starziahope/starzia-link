@@ -17,7 +17,7 @@ type BookmarkUpdate = Partial<Pick<Bookmark, "title" | "description" | "folderId
 type BookmarksContextValue = {
   bookmarks: Bookmark[];
   addBookmark: (bookmark: NewBookmark) => Promise<void>;
-  removeBookmark: (id: string) => void;
+  removeBookmark: (id: string) => Promise<void>;
   updateBookmark: (id: string, updates: BookmarkUpdate) => Promise<void>;
 };
 
@@ -83,7 +83,15 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     setBookmarks((prev) => [toBookmark(data), ...prev]);
   };
 
-  const removeBookmark = (id: string) => {
+  const removeBookmark = async (id: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.from("links").delete().eq("id", id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
     setBookmarks((prev) => prev.filter((bookmark) => bookmark.id !== id));
   };
 

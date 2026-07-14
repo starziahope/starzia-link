@@ -22,9 +22,9 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     ? folders.find((folder) => folder.id === folderId)?.name
     : undefined;
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!pendingDelete) return;
-    removeBookmark(pendingDelete.id);
+    await removeBookmark(pendingDelete.id);
     setPendingDelete(null);
   };
 
