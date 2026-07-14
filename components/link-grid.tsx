@@ -5,12 +5,14 @@ import { useFolders } from "@/lib/folders-context";
 import { useBookmarks } from "@/lib/bookmarks-context";
 import LinkCard from "@/components/link-card";
 import DeleteBookmarkModal from "@/components/delete-bookmark-modal";
+import EditBookmarkModal from "@/components/edit-bookmark-modal";
 import type { Bookmark } from "@/lib/types";
 
 export default function LinkGrid({ folderId }: { folderId?: string }) {
   const { folders } = useFolders();
-  const { bookmarks, removeBookmark } = useBookmarks();
+  const { bookmarks, removeBookmark, updateBookmark } = useBookmarks();
   const [pendingDelete, setPendingDelete] = useState<Bookmark | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<Bookmark | null>(null);
 
   const items = folderId
     ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
@@ -24,6 +26,16 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     if (!pendingDelete) return;
     removeBookmark(pendingDelete.id);
     setPendingDelete(null);
+  };
+
+  const confirmEdit = (updates: {
+    title: string;
+    description?: string;
+    folderId: string;
+  }) => {
+    if (!pendingEdit) return;
+    updateBookmark(pendingEdit.id, updates);
+    setPendingEdit(null);
   };
 
   return (
@@ -46,10 +58,19 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
             <LinkCard
               key={bookmark.id}
               bookmark={bookmark}
+              onEdit={() => setPendingEdit(bookmark)}
               onDelete={() => setPendingDelete(bookmark)}
             />
           ))}
         </section>
+      )}
+
+      {pendingEdit && (
+        <EditBookmarkModal
+          bookmark={pendingEdit}
+          onCancel={() => setPendingEdit(null)}
+          onSave={confirmEdit}
+        />
       )}
 
       {pendingDelete && (

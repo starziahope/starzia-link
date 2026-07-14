@@ -5,9 +5,11 @@ import type { Bookmark } from "@/lib/types";
 
 export default function LinkCard({
   bookmark,
+  onEdit,
   onDelete,
 }: {
   bookmark: Bookmark;
+  onEdit?: () => void;
   onDelete?: () => void;
 }) {
   const { folders } = useFolders();
@@ -24,30 +26,56 @@ export default function LinkCard({
         className="absolute inset-0 z-10"
       />
 
-      {onDelete && (
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label={`${bookmark.title} 링크 삭제`}
-          className="card-action-button absolute right-2 top-2 z-20 rounded-md p-1.5 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-3.5 w-3.5"
-          >
-            <polyline points="3 6 5 6 21 6" />
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-            <path d="M10 11v6" />
-            <path d="M14 11v6" />
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-          </svg>
-        </button>
+      {(onEdit || onDelete) && (
+        <div className="absolute right-2 top-2 z-20 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label={`${bookmark.title} 링크 수정`}
+              className="card-action-button rounded-md p-1.5"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+              >
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="M15 5l4 4" />
+              </svg>
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label={`${bookmark.title} 링크 삭제`}
+              className="card-action-button rounded-md p-1.5"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          )}
+        </div>
       )}
 
       {bookmark.thumbnail && (
@@ -73,7 +101,7 @@ export default function LinkCard({
         )}
         <div
           className={`flex min-w-0 items-center gap-2 ${
-            onDelete && !bookmark.thumbnail ? "pr-7" : ""
+            (onEdit || onDelete) && !bookmark.thumbnail ? "pr-16" : ""
           }`}
         >
           <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-[var(--hover-bg)] text-[10px] font-semibold text-[var(--text-sub)]">
