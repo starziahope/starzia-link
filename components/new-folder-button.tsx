@@ -7,6 +7,7 @@ import { useFolders } from "@/lib/folders-context";
 export default function NewFolderButton() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { addFolder } = useFolders();
 
   const close = () => {
@@ -14,12 +15,19 @@ export default function NewFolderButton() {
     setName("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    addFolder(trimmed);
-    close();
+
+    setSubmitting(true);
+    try {
+      await addFolder(trimmed);
+      close();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -71,7 +79,7 @@ export default function NewFolderButton() {
                 </button>
                 <button
                   type="submit"
-                  disabled={!name.trim()}
+                  disabled={!name.trim() || submitting}
                   className="btn-primary rounded-md px-4 py-2 text-sm font-medium"
                 >
                   저장
