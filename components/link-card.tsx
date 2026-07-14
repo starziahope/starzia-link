@@ -7,22 +7,29 @@ export default function LinkCard({
   bookmark,
   onEdit,
   onDelete,
+  className,
 }: {
   bookmark: Bookmark;
   onEdit?: () => void;
   onDelete?: () => void;
+  className?: string;
 }) {
   const { folders } = useFolders();
   const domain = new URL(bookmark.url).hostname.replace(/^www\./, "");
   const folder = folders.find((folder) => folder.id === bookmark.folderId);
 
   return (
-    <div className="card-hover group relative flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)]">
+    <div
+      className={`card-hover group relative flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] ${
+        className ?? ""
+      }`}
+    >
       <a
         href={bookmark.url}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={bookmark.title}
+        draggable={false}
         className="absolute inset-0 z-10"
       />
 

@@ -10,4 +10,5 @@ export type Bookmark = {
   description?: string;
   thumbnail?: string;
   folderId: string;
+  order: number;
 };

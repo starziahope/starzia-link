@@ -48,6 +48,21 @@ select,
   background: var(--hover-bg);
 }
 
+@keyframes card-drop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.card-drop-in {
+  animation: card-drop-in 220ms ease;
+}
+
 /* 버튼 */
 .btn-primary {
   background: var(--accent);

@@ -19,6 +19,7 @@ type BookmarksContextValue = {
   addBookmark: (bookmark: NewBookmark) => Promise<void>;
   removeBookmark: (id: string) => Promise<void>;
   updateBookmark: (id: string, updates: BookmarkUpdate) => Promise<void>;
+  reorderBookmarks: (orderedIds: string[]) => Promise<void>;
 };
 
 const BookmarksContext = createContext<BookmarksContextValue | null>(null);
@@ -30,6 +31,7 @@ type LinkRow = {
   description: string | null;
   thumbnail_url: string | null;
   folder_id: number | null;
+  array: number;
 };
 
 function toBookmark(row: LinkRow): Bookmark {
@@ -40,6 +42,7 @@ function toBookmark(row: LinkRow): Bookmark {
     description: row.description ?? undefined,
     thumbnail: row.thumbnail_url ?? undefined,
     folderId: row.folder_id !== null ? String(row.folder_id) : "",
+    order: row.array,
   };
 }
 
@@ -50,8 +53,8 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     const supabase = createClient();
     supabase
       .from("links")
-      .select("id, title, url, description, thumbnail_url, folder_id")
-      .order("id", { ascending: false })
+      .select("id, title, url, description, thumbnail_url, folder_id, array")
+      .order("array", { ascending: true })
       .then(({ data, error }) => {
         if (error) {
           console.error(error);
@@ -63,6 +66,11 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
 
   const addBookmark = async (bookmark: NewBookmark) => {
     const supabase = createClient();
+    const nextOrder =
+      bookmarks.length > 0
+        ? Math.max(...bookmarks.map((b) => b.order)) + 1
+        : 0;
+
     const { data, error } = await supabase
       .from("links")
       .insert({
@@ -71,8 +79,9 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
         description: bookmark.description,
         thumbnail_url: bookmark.thumbnail,
         folder_id: bookmark.folderId ? Number(bookmark.folderId) : null,
+        array: nextOrder,
       })
-      .select("id, title, url, description, thumbnail_url, folder_id")
+      .select("id, title, url, description, thumbnail_url, folder_id, array")
       .single();
 
     if (error) {
@@ -80,7 +89,7 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setBookmarks((prev) => [toBookmark(data), ...prev]);
+    setBookmarks((prev) => [...prev, toBookmark(data)]);
   };
 
   const removeBookmark = async (id: string) => {
@@ -122,9 +131,40 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const reorderBookmarks = async (orderedIds: string[]) => {
+    const orderMap = new Map(orderedIds.map((id, index) => [id, index]));
+    setBookmarks((prev) =>
+      prev
+        .map((bookmark) =>
+          orderMap.has(bookmark.id)
+            ? { ...bookmark, order: orderMap.get(bookmark.id)! }
+            : bookmark
+        )
+        .sort((a, b) => a.order - b.order)
+    );
+
+    const supabase = createClient();
+    const results = await Promise.all(
+      orderedIds.map((id, index) =>
+        supabase.from("links").update({ array: index }).eq("id", id)
+      )
+    );
+
+    const failed = results.find((result) => result.error);
+    if (failed?.error) {
+      console.error(failed.error);
+    }
+  };
+
   return (
     <BookmarksContext.Provider
-      value={{ bookmarks, addBookmark, removeBookmark, updateBookmark }}
+      value={{
+        bookmarks,
+        addBookmark,
+        removeBookmark,
+        updateBookmark,
+        reorderBookmarks,
+      }}
     >
       {children}
     </BookmarksContext.Provider>

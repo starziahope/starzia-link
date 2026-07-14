@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useFolders } from "@/lib/folders-context";
 import { useBookmarks } from "@/lib/bookmarks-context";
 import LinkCard from "@/components/link-card";
@@ -10,13 +10,65 @@ import type { Bookmark } from "@/lib/types";
 
 export default function LinkGrid({ folderId }: { folderId?: string }) {
   const { folders } = useFolders();
-  const { bookmarks, removeBookmark, updateBookmark } = useBookmarks();
+  const { bookmarks, removeBookmark, updateBookmark, reorderBookmarks } =
+    useBookmarks();
   const [pendingDelete, setPendingDelete] = useState<Bookmark | null>(null);
   const [pendingEdit, setPendingEdit] = useState<Bookmark | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [draggedHeight, setDraggedHeight] = useState<number | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [settledId, setSettledId] = useState<string | null>(null);
+  const cardRefs = useRef(new Map<string, HTMLDivElement>());
+  const prevRects = useRef<Map<string, DOMRect> | null>(null);
 
   const items = folderId
     ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
     : bookmarks;
+
+  const displayItems = (() => {
+    if (!draggedId || !overId || draggedId === overId) return items;
+    const fromIndex = items.findIndex((b) => b.id === draggedId);
+    const toIndex = items.findIndex((b) => b.id === overId);
+    if (fromIndex === -1 || toIndex === -1) return items;
+
+    const reordered = [...items];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    return reordered;
+  })();
+
+  const orderKey = displayItems.map((bookmark) => bookmark.id).join(",");
+
+  const captureRects = () => {
+    const rects = new Map<string, DOMRect>();
+    cardRefs.current.forEach((el, id) => {
+      rects.set(id, el.getBoundingClientRect());
+    });
+    prevRects.current = rects;
+  };
+
+  useLayoutEffect(() => {
+    const prev = prevRects.current;
+    if (!prev) return;
+    prevRects.current = null;
+
+    cardRefs.current.forEach((el, id) => {
+      const oldRect = prev.get(id);
+      if (!oldRect) return;
+      const newRect = el.getBoundingClientRect();
+      const dx = oldRect.left - newRect.left;
+      const dy = oldRect.top - newRect.top;
+      if (dx === 0 && dy === 0) return;
+
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 250ms ease";
+        el.style.transform = "";
+      });
+    });
+  }, [orderKey]);
 
   const folderName = folderId
     ? folders.find((folder) => folder.id === folderId)?.name
@@ -38,6 +90,50 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     setPendingEdit(null);
   };
 
+  const handleDragStart = (id: string) => {
+    const height = cardRefs.current.get(id)?.getBoundingClientRect().height;
+    setDraggedHeight(height ?? null);
+    setDraggedId(id);
+  };
+
+  const handleDragEnter = (targetId: string) => {
+    if (!draggedId || draggedId === targetId || overId === targetId) return;
+    captureRects();
+    setOverId(targetId);
+  };
+
+  const handleDrop = () => {
+    if (!draggedId) return;
+    const sourceId = draggedId;
+    const shouldPersist = overId !== null;
+    const finalIds = displayItems.map((bookmark) => bookmark.id);
+
+    if (shouldPersist) {
+      // Fire without awaiting so the optimistic reorder inside
+      // reorderBookmarks batches with the state resets below —
+      // the dragged card lands in its final spot in one render
+      // instead of flashing back to its old position first.
+      reorderBookmarks(finalIds);
+      setSettledId(sourceId);
+      window.setTimeout(() => {
+        setSettledId((current) => (current === sourceId ? null : current));
+      }, 220);
+    }
+
+    setDraggedId(null);
+    setDraggedHeight(null);
+    setOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedId && overId) {
+      captureRects();
+    }
+    setDraggedId(null);
+    setDraggedHeight(null);
+    setOverId(null);
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       {folderName && (
@@ -46,7 +142,7 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
         </h1>
       )}
 
-      {items.length === 0 ? (
+      {displayItems.length === 0 ? (
         <section className="flex flex-1 items-center justify-center p-6">
           <p className="text-sm text-[var(--text-sub)]">
             저장된 링크가 없습니다.
@@ -54,13 +150,39 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
         </section>
       ) : (
         <section className="grid flex-1 grid-cols-1 content-start gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((bookmark) => (
-            <LinkCard
+          {displayItems.map((bookmark) => (
+            <div
               key={bookmark.id}
-              bookmark={bookmark}
-              onEdit={() => setPendingEdit(bookmark)}
-              onDelete={() => setPendingDelete(bookmark)}
-            />
+              ref={(el) => {
+                if (el) cardRefs.current.set(bookmark.id, el);
+                else cardRefs.current.delete(bookmark.id);
+              }}
+              draggable
+              onDragStart={() => handleDragStart(bookmark.id)}
+              onDragEnter={() => handleDragEnter(bookmark.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDrop();
+              }}
+              onDragEnd={handleDragEnd}
+            >
+              {bookmark.id === draggedId ? (
+                <div
+                  style={{ height: draggedHeight ?? undefined }}
+                  className="rounded-lg border-2 border-dashed border-[var(--border)] bg-[var(--hover-bg)]"
+                />
+              ) : (
+                <LinkCard
+                  bookmark={bookmark}
+                  onEdit={() => setPendingEdit(bookmark)}
+                  onDelete={() => setPendingDelete(bookmark)}
+                  className={
+                    bookmark.id === settledId ? "card-drop-in" : undefined
+                  }
+                />
+              )}
+            </div>
           ))}
         </section>
       )}
