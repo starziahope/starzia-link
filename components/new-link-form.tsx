@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { folders } from "@/lib/mock-data";
+import { useFolders } from "@/lib/folders-context";
 import { useBookmarks } from "@/lib/bookmarks-context";
 import FolderSelect from "@/components/folder-select";
 
@@ -10,11 +10,13 @@ export default function NewLinkForm() {
   const [url, setUrl] = useState("");
   const [folderId, setFolderId] = useState("");
   const [loading, setLoading] = useState(false);
+  const { folders } = useFolders();
   const { addBookmark } = useBookmarks();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     let title = url;
@@ -38,7 +40,7 @@ export default function NewLinkForm() {
       // 오픈 그래프 정보를 가져오지 못해도 링크는 저장한다
     }
 
-    addBookmark({ title, url, description, thumbnail, folderId });
+    await addBookmark({ title, url, description, thumbnail, folderId });
     setLoading(false);
     router.push("/");
   };
