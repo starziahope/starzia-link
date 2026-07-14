@@ -1,0 +1,36 @@
+import { bookmarks, folders } from "@/lib/mock-data";
+import LinkCard from "@/components/link-card";
+
+export default function LinkGrid({ folderId }: { folderId?: string }) {
+  const items = folderId
+    ? bookmarks.filter((bookmark) => bookmark.folderId === folderId)
+    : bookmarks;
+
+  const folderName = folderId
+    ? folders.find((folder) => folder.id === folderId)?.name
+    : undefined;
+
+  return (
+    <div className="flex flex-1 flex-col">
+      {folderName && (
+        <h1 className="px-6 pt-6 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          {folderName}
+        </h1>
+      )}
+
+      {items.length === 0 ? (
+        <section className="flex flex-1 items-center justify-center p-6">
+          <p className="text-sm text-zinc-400 dark:text-zinc-500">
+            저장된 링크가 없습니다.
+          </p>
+        </section>
+      ) : (
+        <section className="grid flex-1 grid-cols-1 content-start gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {items.map((bookmark) => (
+            <LinkCard key={bookmark.id} bookmark={bookmark} />
+          ))}
+        </section>
+      )}
+    </div>
+  );
+}
