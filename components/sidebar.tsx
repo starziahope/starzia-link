@@ -6,13 +6,15 @@ import { bookmarks } from "@/lib/mock-data";
 import { useFolders } from "@/lib/folders-context";
 import SidebarItem from "@/components/sidebar-item";
 import DeleteFolderModal from "@/components/delete-folder-modal";
+import EditFolderModal from "@/components/edit-folder-modal";
 import type { Folder } from "@/lib/types";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { folders, removeFolder } = useFolders();
+  const { folders, removeFolder, renameFolder } = useFolders();
   const [pendingDelete, setPendingDelete] = useState<Folder | null>(null);
+  const [pendingEdit, setPendingEdit] = useState<Folder | null>(null);
 
   const confirmDelete = () => {
     if (!pendingDelete) return;
@@ -20,6 +22,12 @@ export default function Sidebar() {
     removeFolder(pendingDelete.id);
     setPendingDelete(null);
     if (wasActive) router.push("/");
+  };
+
+  const confirmEdit = (name: string) => {
+    if (!pendingEdit) return;
+    renameFolder(pendingEdit.id, name);
+    setPendingEdit(null);
   };
 
   return (
@@ -45,10 +53,19 @@ export default function Sidebar() {
               bookmarks.filter((b) => b.folderId === folder.id).length
             }
             active={pathname === `/folder/${folder.id}`}
+            onEdit={() => setPendingEdit(folder)}
             onDelete={() => setPendingDelete(folder)}
           />
         ))}
       </nav>
+
+      {pendingEdit && (
+        <EditFolderModal
+          initialName={pendingEdit.name}
+          onCancel={() => setPendingEdit(null)}
+          onSave={confirmEdit}
+        />
+      )}
 
       {pendingDelete && (
         <DeleteFolderModal

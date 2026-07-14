@@ -5,12 +5,14 @@ export default function SidebarItem({
   label,
   count,
   active,
+  onEdit,
   onDelete,
 }: {
   href: string;
   label: string;
   count?: number;
   active: boolean;
+  onEdit?: () => void;
   onDelete?: () => void;
 }) {
   return (
@@ -23,12 +25,36 @@ export default function SidebarItem({
         {label}
       </Link>
       <span className="flex shrink-0 items-center gap-1">
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`${label} 폴더 수정`}
+            className={`sidebar-item-action rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
+              active ? "text-white/70" : "text-[var(--text-sub)]"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="M15 5l4 4" />
+            </svg>
+          </button>
+        )}
         {onDelete && (
           <button
             type="button"
             onClick={onDelete}
             aria-label={`${label} 폴더 삭제`}
-            className={`sidebar-item-delete rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
+            className={`sidebar-item-action rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 ${
               active ? "text-white/70" : "text-[var(--text-sub)]"
             }`}
           >
