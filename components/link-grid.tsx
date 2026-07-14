@@ -13,14 +13,14 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
   return (
     <div className="flex flex-1 flex-col">
       {folderName && (
-        <h1 className="px-6 pt-6 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="px-6 pt-10 text-[20px] leading-[1.3] font-semibold text-[var(--text)]">
           {folderName}
         </h1>
       )}
 
       {items.length === 0 ? (
         <section className="flex flex-1 items-center justify-center p-6">
-          <p className="text-sm text-zinc-400 dark:text-zinc-500">
+          <p className="text-sm text-[var(--text-sub)]">
             저장된 링크가 없습니다.
           </p>
         </section>

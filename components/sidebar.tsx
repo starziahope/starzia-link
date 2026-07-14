@@ -8,7 +8,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 shrink-0 border-r border-zinc-200 p-4 dark:border-zinc-800">
+    <aside className="w-56 shrink-0 border-r border-[var(--border)] p-4">
       <nav className="flex flex-col gap-1">
         <SidebarItem
           href="/"
@@ -17,7 +17,7 @@ export default function Sidebar() {
           active={pathname === "/"}
         />
 
-        <p className="mt-4 mb-1 px-3 text-xs font-medium text-zinc-400 dark:text-zinc-500">
+        <p className="mt-4 mb-1 px-3 text-xs font-medium text-[var(--text-sub)]">
           폴더
         </p>
 

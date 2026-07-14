@@ -14,19 +14,15 @@ export default function SidebarItem({
   return (
     <Link
       href={href}
-      className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-        active
-          ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+      className={`sidebar-item flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium ${
+        active ? "sidebar-item-active" : ""
       }`}
     >
       <span className="truncate">{label}</span>
       {count !== undefined && (
         <span
           className={`text-xs ${
-            active
-              ? "text-zinc-300 dark:text-zinc-500"
-              : "text-zinc-400 dark:text-zinc-600"
+            active ? "text-white/70" : "text-[var(--text-sub)]"
           }`}
         >
           {count}
