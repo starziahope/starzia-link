@@ -28,13 +28,13 @@ export default function LinkGrid({ folderId }: { folderId?: string }) {
     setPendingDelete(null);
   };
 
-  const confirmEdit = (updates: {
+  const confirmEdit = async (updates: {
     title: string;
     description?: string;
     folderId: string;
   }) => {
     if (!pendingEdit) return;
-    updateBookmark(pendingEdit.id, updates);
+    await updateBookmark(pendingEdit.id, updates);
     setPendingEdit(null);
   };
 
