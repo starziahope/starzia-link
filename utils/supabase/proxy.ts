@@ -33,9 +33,21 @@ export const updateSession = async (request: NextRequest) => {
     },
   );
 
-  // Refreshes the session cookie if needed. Required for keeping the
-  // session valid across Server Components, which cannot set cookies.
-  await supabase.auth.getUser();
+  // Refreshes the session cookie if needed and validates the JWT. Required
+  // for keeping the session valid across Server Components, which cannot
+  // set cookies.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+
+  const { pathname } = request.nextUrl;
+  const isProtectedRoute =
+    pathname === "/" || pathname.startsWith("/folder/") || pathname === "/new";
+
+  if (!user && isProtectedRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse
 };
