@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 import type { Bookmark } from "@/lib/types";
 
 type NewBookmark = {
@@ -47,24 +48,35 @@ function toBookmark(row: LinkRow): Bookmark {
 }
 
 export function BookmarksProvider({ children }: { children: ReactNode }) {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const { userId } = useAuth();
+  const [loaded, setLoaded] = useState<{ userId: string; bookmarks: Bookmark[] } | null>(null);
 
   useEffect(() => {
+    if (!userId) return;
+
     const supabase = createClient();
     supabase
       .from("links")
       .select("id, title, url, description, thumbnail_url, folder_id, array")
+      .eq("user_id", userId)
       .order("array", { ascending: true })
       .then(({ data, error }) => {
         if (error) {
           console.error(error);
           return;
         }
-        setBookmarks(data.map(toBookmark));
+        setLoaded({ userId, bookmarks: data.map(toBookmark) });
       });
-  }, []);
+  }, [userId]);
+
+  // Data belongs to whichever user it was fetched for. As soon as the
+  // logged-in user changes, this falls back to an empty list until the
+  // effect above loads fresh data for the new user.
+  const bookmarks = loaded && loaded.userId === userId ? loaded.bookmarks : [];
 
   const addBookmark = async (bookmark: NewBookmark) => {
+    if (!userId) return;
+
     const supabase = createClient();
     const nextOrder =
       bookmarks.length > 0
@@ -89,10 +101,12 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setBookmarks((prev) => [...prev, toBookmark(data)]);
+    setLoaded({ userId, bookmarks: [...bookmarks, toBookmark(data)] });
   };
 
   const removeBookmark = async (id: string) => {
+    if (!userId) return;
+
     const supabase = createClient();
     const { error } = await supabase.from("links").delete().eq("id", id);
 
@@ -101,10 +115,15 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setBookmarks((prev) => prev.filter((bookmark) => bookmark.id !== id));
+    setLoaded({
+      userId,
+      bookmarks: bookmarks.filter((bookmark) => bookmark.id !== id),
+    });
   };
 
   const updateBookmark = async (id: string, updates: BookmarkUpdate) => {
+    if (!userId) return;
+
     const supabase = createClient();
     const { error } = await supabase
       .from("links")
@@ -124,24 +143,28 @@ export function BookmarksProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    setBookmarks((prev) =>
-      prev.map((bookmark) =>
+    setLoaded({
+      userId,
+      bookmarks: bookmarks.map((bookmark) =>
         bookmark.id === id ? { ...bookmark, ...updates } : bookmark
-      )
-    );
+      ),
+    });
   };
 
   const reorderBookmarks = async (orderedIds: string[]) => {
+    if (!userId) return;
+
     const orderMap = new Map(orderedIds.map((id, index) => [id, index]));
-    setBookmarks((prev) =>
-      prev
+    setLoaded({
+      userId,
+      bookmarks: bookmarks
         .map((bookmark) =>
           orderMap.has(bookmark.id)
             ? { ...bookmark, order: orderMap.get(bookmark.id)! }
             : bookmark
         )
-        .sort((a, b) => a.order - b.order)
-    );
+        .sort((a, b) => a.order - b.order),
+    });
 
     const supabase = createClient();
     const results = await Promise.all(

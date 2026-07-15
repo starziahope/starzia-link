@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthProvider } from "@/lib/auth-context";
 import { FoldersProvider } from "@/lib/folders-context";
 import { BookmarksProvider } from "@/lib/bookmarks-context";
 import "./globals.css";
@@ -16,9 +17,11 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[var(--bg)]">
-        <FoldersProvider>
-          <BookmarksProvider>{children}</BookmarksProvider>
-        </FoldersProvider>
+        <AuthProvider>
+          <FoldersProvider>
+            <BookmarksProvider>{children}</BookmarksProvider>
+          </FoldersProvider>
+        </AuthProvider>
       </body>
     </html>
   );
