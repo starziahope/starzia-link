@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "로그인 오류",
+};
 
 export default function AuthCodeErrorPage() {
   return (
