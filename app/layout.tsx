@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Header from "@/components/header";
-import Sidebar from "@/components/sidebar";
 import { FoldersProvider } from "@/lib/folders-context";
 import { BookmarksProvider } from "@/lib/bookmarks-context";
 import "./globals.css";
@@ -19,15 +17,7 @@ export default function RootLayout({
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-[var(--bg)]">
         <FoldersProvider>
-          <BookmarksProvider>
-            <div className="flex flex-1 flex-col">
-              <Header />
-              <div className="flex flex-1">
-                <Sidebar />
-                {children}
-              </div>
-            </div>
-          </BookmarksProvider>
+          <BookmarksProvider>{children}</BookmarksProvider>
         </FoldersProvider>
       </body>
     </html>
