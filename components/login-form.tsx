@@ -25,10 +25,22 @@ function getLoginErrorMessage(error: AuthError): string {
   }
 }
 
+function getKakaoLoginErrorMessage(error: AuthError): string {
+  switch (error.code) {
+    case "provider_disabled":
+      return "카카오 로그인이 현재 비활성화되어 있습니다.";
+    case "over_request_rate_limit":
+      return "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.";
+    default:
+      return "카카오 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.";
+  }
+}
+
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [kakaoLoading, setKakaoLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
@@ -65,6 +77,24 @@ export default function LoginForm() {
     }
 
     router.push("/");
+  };
+
+  const handleKakaoLogin = async () => {
+    if (kakaoLoading) return;
+    setKakaoLoading(true);
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "kakao",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setKakaoLoading(false);
+      showToast(getKakaoLoginErrorMessage(error));
+    }
   };
 
   return (
@@ -112,6 +142,19 @@ export default function LoginForm() {
           className="btn-primary mt-2 rounded-md px-4 py-2 text-sm font-medium"
         >
           {loading ? "로그인 중..." : "로그인"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleKakaoLogin}
+          disabled={kakaoLoading}
+          className="disabled:opacity-60"
+        >
+          <img
+            src="/kakao_login_large_wide.png"
+            alt="카카오 로그인"
+            className="block w-full h-auto"
+          />
         </button>
 
         <Link
